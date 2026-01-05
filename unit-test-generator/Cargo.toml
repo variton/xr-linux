@@ -12,3 +12,10 @@ futures = "0.3"
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 clap = { version = "4.5.54", features = ["derive"] }
+
+[profile.release]
+opt-level = 3
+lto = true          # or "thin" if build times get annoying
+codegen-units = 1
+panic = "abort"     # usually fine for services/CLIs; can reduce overhead a bit
+debug = 0
