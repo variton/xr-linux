@@ -17,6 +17,11 @@ cargo build --release
 
 ```
 
+*in release for target CPU*
+```
+RUSTFLAGS="-C target-cpu=native" cargo build --release
+
+```
 ## Generate the unit tests 
 Use the following command line to generate the file that contains the unit tests:
 
