@@ -1,0 +1,7 @@
+#vim extensions
+*.swp
+*.swo
+*.swn
+
+#directories to ignore
+target/
