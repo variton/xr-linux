@@ -20,3 +20,6 @@ The tools are folded in different directories depending on their usage.
 
 ### Unit-test-generator 
 The tool generates unit test for different languages using AI models.
+
+### Update-pkg
+The cli update the packages listed with apt list --upgradable 
