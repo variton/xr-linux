@@ -44,5 +44,9 @@ cargo run -- <file.py>
 ```
 
 ## To run tests
-todo
+Use the following command line to run a simple non regression test:
 
+```
+cargo run -- -l python sample/mgr.py
+
+```

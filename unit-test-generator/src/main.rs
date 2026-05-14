@@ -1,5 +1,6 @@
 mod config;
 mod config_mgr;
+mod iofilehdr;
 mod prompt;
 
 use anyhow::{Context, Result};
@@ -9,6 +10,7 @@ use std;
 use std::env;
 use std::fs;
 
+use iofilehdr::{read, write};
 use prompt::get_prompt;
 
 #[derive(Parser, Debug)]
@@ -50,7 +52,7 @@ async fn main() -> Result<()> {
     let config = OpenAIConfig::new().with_api_key(key);
     let client = Client::with_config(config);
 
-    let code = read_file(&args.input)?;
+    let code = read(&args.input)?;
     let prompt_template = get_prompt(&args.lang, "prompts.json")?;
     let prompt = format!("{} {}", prompt_template, code);
 
@@ -66,6 +68,6 @@ async fn main() -> Result<()> {
         .create(request) // Make the API call in that "group"
         .await?;
 
-    write_file("output.txt", &response.output_text().unwrap())?;
+    write("output.txt", &response.output_text().unwrap())?;
     Ok(())
 }
