@@ -1,14 +1,25 @@
+mod config;
+mod config_mgr;
+mod prompt;
+
 use anyhow::{Context, Result};
 use async_openai::{Client, config::OpenAIConfig, types::responses::CreateResponseArgs};
 use clap::Parser;
+use std;
 use std::env;
 use std::fs;
 
+use prompt::get_prompt;
+
 #[derive(Parser, Debug)]
-#[command(author, version, about)]
+#[command(author, version, about,long_about = None)]
 struct Args {
     /// Input file
     input: String,
+
+    //main stream language to choose
+    #[arg(short, long)]
+    lang: String,
 
     /// Number of times
     #[arg(short, long, default_value_t = 1)]
@@ -31,15 +42,17 @@ async fn main() -> Result<()> {
     let key = env::var("OPEN_AI_KEY")?;
     let args = Args::parse();
 
+    if args.count == 0 {
+        eprintln!("missing argument");
+        std::process::exit(1);
+    }
+
     let config = OpenAIConfig::new().with_api_key(key);
     let client = Client::with_config(config);
 
     let code = read_file(&args.input)?;
-    let prompt = format!(
-        "Only generate unit tests runable with pytest \
-        and do not gegenerate any test with unittest.mock for the following code: \n {}",
-        code
-    );
+    let prompt_template = get_prompt(&args.lang, "prompts.json")?;
+    let prompt = format!("{} {}", prompt_template, code);
 
     let request = CreateResponseArgs::default()
         .model("gpt-4.1")

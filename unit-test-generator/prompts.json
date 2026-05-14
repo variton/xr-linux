@@ -1,0 +1,5 @@
+{
+    "rust": "Only generate unit tests runable with rust for the following rs file: \n {}",
+    "python": "Only generate unit tests runable with pytest and do not generate any test with unittest.mock for the following py file: \n {}",
+    "cpp":"Only generate unit tests runable with doctest cpp for each method contained in the following cpp file: \n {}"
+}
