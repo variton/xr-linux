@@ -11,7 +11,7 @@ pub fn get_prompt(args: &Args) -> Result<String> {
     let code = read(&args.input)?;
     let file_type = detect_source_file(&args.input)?;
 
-    let config = load_config::<Config>(&args.conf)?;
+    let config = load_config::<Config>(&args.pconf)?;
 
     let prompt_template = match file_type {
         SourceFileType::Rust => config.rust,
