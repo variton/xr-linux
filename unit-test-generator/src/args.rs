@@ -12,9 +12,9 @@ pub struct Args {
     #[arg(short, long)]
     pub output: String,
 
-    /// Configuration file
+    /// Prompt configuration file
     #[arg(long)]
-    pub conf: String,
+    pub pconf: String,
 
     /// Number of times
     #[arg(short, long, default_value_t = 1)]
