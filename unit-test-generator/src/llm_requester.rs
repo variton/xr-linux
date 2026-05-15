@@ -45,3 +45,12 @@ impl<'a> LLMRequester<'a> {
         Ok(response)
     }
 }
+
+pub fn create_llm_requester<'a>(model_name: &'a str, max_tokens: u32) -> Result<LLMRequester<'a>> {
+    let key = std::env::var("OPEN_AI_KEY")?;
+
+    let mut requester = LLMRequester::new(key, model_name, max_tokens);
+    requester.init()?;
+
+    Ok(requester)
+}
