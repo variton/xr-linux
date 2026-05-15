@@ -1,18 +1,10 @@
-mod args;
-mod config;
-mod config_mgr;
-mod iofilehdr;
-mod llm_requester;
-mod prompt;
-
 use anyhow::Result;
 use std;
-use std::env;
 
-use args::Args;
-use iofilehdr::write;
-use llm_requester::create_llm_requester;
-use prompt::get_prompt;
+use xllm_requester::args::Args;
+use xllm_requester::iofilehdr::write;
+use xllm_requester::llm_requester::create_llm_requester;
+use xllm_requester::prompt::get_prompt;
 
 #[tokio::main]
 async fn main() -> Result<()> {
