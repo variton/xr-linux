@@ -47,6 +47,6 @@ cargo run -- <file.py>
 Use the following command line to run a simple non regression test:
 
 ```
-cargo run -- -l python sample/mgr.py
+cargo run -- -i sample/mgr.py -o output.txt -l python --conf prompts.json
 
 ```
