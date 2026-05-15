@@ -25,8 +25,8 @@ async fn main() -> Result<()> {
     }
 
     let prompt = get_prompt(&args)?;
-
-    let mut llm_requester = LLMRequester::new(key, "gpt-4.1".to_string(), 512);
+    let model_name = "gpt-4.1";
+    let mut llm_requester = LLMRequester::new(key, model_name, 512);
     llm_requester.init()?;
     let response = llm_requester.request(&prompt).await?;
 

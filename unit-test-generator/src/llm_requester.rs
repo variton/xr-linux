@@ -2,15 +2,15 @@ use anyhow::{Context, Result};
 use async_openai::types::responses::Response;
 use async_openai::{Client, config::OpenAIConfig, types::responses::CreateResponseArgs};
 
-pub struct LLMRequester {
+pub struct LLMRequester<'a> {
     llm_api_key: String,
-    llm_model_name: String,
+    llm_model_name: &'a str,
     llm_client: Option<Client<OpenAIConfig>>,
     llm_max_output_tokens: u32,
 }
 
-impl LLMRequester {
-    pub fn new(api_key: String, model_name: String, max_output_tokens: u32) -> Self {
+impl<'a> LLMRequester<'a> {
+    pub fn new(api_key: String, model_name: &'a str, max_output_tokens: u32) -> Self {
         LLMRequester {
             llm_api_key: api_key,
             llm_model_name: model_name,
@@ -32,7 +32,7 @@ impl LLMRequester {
             .context("LLM client has not been initialized")?;
 
         let request = CreateResponseArgs::default()
-            .model(self.llm_model_name.clone())
+            .model(self.llm_model_name)
             .input(prompt)
             .max_output_tokens(self.llm_max_output_tokens)
             .build()?;
