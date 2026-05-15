@@ -16,10 +16,6 @@ pub struct Args {
     #[arg(long)]
     pub conf: String,
 
-    /// Main stream language to choose
-    #[arg(short, long)]
-    pub lang: String,
-
     /// Number of times
     #[arg(short, long, default_value_t = 1)]
     pub count: usize,
