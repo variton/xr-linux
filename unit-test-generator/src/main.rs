@@ -28,17 +28,6 @@ struct Args {
     count: usize,
 }
 
-fn read_file(path: &str) -> Result<String> {
-    let contents =
-        fs::read_to_string(path).with_context(|| format!("failed to read file `{}`", path))?;
-    Ok(contents)
-}
-
-fn write_file(path: &str, contents: &str) -> Result<()> {
-    fs::write(path, contents).with_context(|| format!("failed to write to `{}`", path))?;
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     let key = env::var("OPEN_AI_KEY")?;
