@@ -32,15 +32,23 @@ mod tests {
     fn create_config(path: &std::path::Path) {
         std::fs::write(
             path,
-            r#"
-            {
+            r#"{
                 "rust": "RUST_PROMPT",
                 "python": "PYTHON_PROMPT",
                 "cpp": "CPP_PROMPT"
-            }
-            "#,
+            }"#,
         )
         .unwrap();
+    }
+
+    fn create_args(input: &std::path::Path, config: &std::path::Path) -> Args {
+        Args {
+            input: input.to_str().unwrap().to_string(),
+            output: "out.txt".to_string(),
+            lrconf: "requester.json".to_string(),
+            pconf: config.to_str().unwrap().to_string(),
+            count: 1,
+        }
     }
 
     #[test]
@@ -51,15 +59,9 @@ mod tests {
         let config = dir.path().join("config.json");
 
         std::fs::write(&input, "fn main() {}").unwrap();
-
         create_config(&config);
 
-        let args = Args {
-            input: input.to_str().unwrap().to_string(),
-            output: "out.txt".to_string(),
-            pconf: config.to_str().unwrap().to_string(),
-            count: 1,
-        };
+        let args = create_args(&input, &config);
 
         let result = get_prompt(&args).unwrap();
 
@@ -74,15 +76,9 @@ mod tests {
         let config = dir.path().join("config.json");
 
         std::fs::write(&input, "print('hi')").unwrap();
-
         create_config(&config);
 
-        let args = Args {
-            input: input.to_str().unwrap().to_string(),
-            output: "out.txt".to_string(),
-            pconf: config.to_str().unwrap().to_string(),
-            count: 1,
-        };
+        let args = create_args(&input, &config);
 
         let result = get_prompt(&args).unwrap();
 
@@ -97,15 +93,9 @@ mod tests {
         let config = dir.path().join("config.json");
 
         std::fs::write(&input, "int main() {}").unwrap();
-
         create_config(&config);
 
-        let args = Args {
-            input: input.to_str().unwrap().to_string(),
-            output: "out.txt".to_string(),
-            pconf: config.to_str().unwrap().to_string(),
-            count: 1,
-        };
+        let args = create_args(&input, &config);
 
         let result = get_prompt(&args).unwrap();
 
@@ -116,16 +106,12 @@ mod tests {
     fn get_prompt_fails_when_input_missing() {
         let dir = tempdir().unwrap();
 
+        let input = dir.path().join("missing.rs");
         let config = dir.path().join("config.json");
 
         create_config(&config);
 
-        let args = Args {
-            input: "missing.rs".to_string(),
-            output: "out.txt".to_string(),
-            pconf: config.to_str().unwrap().to_string(),
-            count: 1,
-        };
+        let args = create_args(&input, &config);
 
         let result = get_prompt(&args);
 
@@ -137,15 +123,11 @@ mod tests {
         let dir = tempdir().unwrap();
 
         let input = dir.path().join("main.rs");
+        let config = dir.path().join("missing.json");
 
         std::fs::write(&input, "fn main() {}").unwrap();
 
-        let args = Args {
-            input: input.to_str().unwrap().to_string(),
-            output: "out.txt".to_string(),
-            pconf: "missing.json".to_string(),
-            count: 1,
-        };
+        let args = create_args(&input, &config);
 
         let result = get_prompt(&args);
 
@@ -160,15 +142,9 @@ mod tests {
         let config = dir.path().join("config.json");
 
         std::fs::write(&input, "hello").unwrap();
-
         create_config(&config);
 
-        let args = Args {
-            input: input.to_str().unwrap().to_string(),
-            output: "out.txt".to_string(),
-            pconf: config.to_str().unwrap().to_string(),
-            count: 1,
-        };
+        let args = create_args(&input, &config);
 
         let result = get_prompt(&args);
 
