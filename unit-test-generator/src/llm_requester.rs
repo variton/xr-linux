@@ -54,3 +54,33 @@ pub fn create_llm_requester<'a>(model_name: &'a str, max_tokens: u32) -> Result<
 
     Ok(requester)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn request_fails_when_client_not_initialized() {
+        let requester = LLMRequester::new("fake-key".to_string(), "gpt-4", 100);
+
+        let result = requester.request("hello").await;
+
+        assert!(result.is_err());
+
+        let error = result.unwrap_err().to_string();
+
+        assert!(error.contains("LLM client has not been initialized"));
+    }
+
+    // #[test]
+    // fn create_llm_requester_fails_without_env_var() {
+    //     std::env::remove_var("OPEN_AI_KEY");
+
+    //     let result = create_llm_requester(
+    //         "gpt-4",
+    //         100,
+    //     );
+
+    //     assert!(result.is_err());
+    // }
+}
