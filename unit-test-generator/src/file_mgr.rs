@@ -2,12 +2,60 @@ use anyhow::{Result, bail};
 use std::fs;
 use std::path::Path;
 
+/// Supported source file types detected by the application.
 #[derive(Debug, Clone, Copy)]
 pub enum SourceFileType {
+    /// C++ source or header file.
     Cpp,
+
+    /// Python source file.
     Python,
+
+    /// Rust source file.
     Rust,
 }
+
+/// Detects the programming language of a source file.
+///
+/// Detection is performed in two stages:
+///
+/// 1. by inspecting the file extension,
+/// 2. by applying simple content heuristics when no extension is present.
+///
+/// Supported extensions:
+///
+/// - Rust: `.rs`
+/// - Python: `.py`
+/// - C++: `.cpp`, `.cc`, `.cxx`, `.hpp`, `.h`
+///
+/// When no extension exists, the file contents are scanned for common
+/// language-specific patterns.
+///
+/// # Arguments
+///
+/// * `path` - Path to the source file.
+///
+/// # Errors
+///
+/// Returns an error if:
+///
+/// - the file extension is unsupported,
+/// - the file cannot be read,
+/// - the language cannot be determined.
+///
+/// # Examples
+///
+/// ```no_run
+/// use xllm_requester::file_mgr::{
+///     detect_source_file,
+///     SourceFileType,
+/// };
+///
+/// let file_type = detect_source_file("main.rs")?;
+///
+/// assert!(matches!(file_type, SourceFileType::Rust));
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 
 pub fn detect_source_file<P: AsRef<Path>>(path: P) -> Result<SourceFileType> {
     let path = path.as_ref();

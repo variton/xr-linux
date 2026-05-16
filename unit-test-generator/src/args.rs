@@ -1,36 +1,44 @@
 use clap::Parser;
 
-/// Command-line arguments
+/// Command-line arguments for the application.
+///
+/// These arguments define the input source file, output file,
+/// prompt configuration, LLM requester configuration, and execution count.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
-    /// Input file
+    /// Path to the input source file.
     #[arg(short, long)]
     pub input: String,
 
-    /// Output file
+    /// Path where the generated output should be written.
     #[arg(short, long)]
     pub output: String,
 
-    /// LLMRequester configuration file
+    /// Path to the LLM requester configuration file.
     #[arg(long)]
     pub lrconf: String,
 
-    /// Prompt configuration file
+    /// Path to the prompt configuration file.
     #[arg(long)]
     pub pconf: String,
 
-    /// Number of times
+    /// Number of times the request should be executed.
+    ///
+    /// Defaults to `1` when not provided.
     #[arg(short, long, default_value_t = 1)]
     pub count: usize,
 }
 
 impl Args {
-    /// Parse CLI arguments
+    /// Parses command-line arguments from the current process.
+    ///
+    /// This uses [`clap::Parser::parse`] internally.
     pub fn parse_args() -> Self {
         Self::parse()
     }
 }
+
 
 #[cfg(test)]
 mod tests {

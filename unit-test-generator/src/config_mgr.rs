@@ -2,6 +2,42 @@ use anyhow::Result;
 use serde::de::DeserializeOwned;
 use std::fs;
 
+/// Loads and deserializes a JSON configuration file.
+///
+/// The file contents are read into memory and deserialized into the
+/// requested type `T`.
+///
+/// # Type Parameters
+///
+/// * `T` - A type implementing [`DeserializeOwned`] that represents
+///   the configuration structure.
+///
+/// # Arguments
+///
+/// * `path` - Path to the JSON configuration file.
+///
+/// # Errors
+///
+/// Returns an error if:
+///
+/// - the file cannot be read,
+/// - the file contents are not valid JSON,
+/// - deserialization into `T` fails.
+///
+/// # Examples
+///
+/// ```no_run
+/// use serde::Deserialize;
+///
+/// #[derive(Deserialize)]
+/// struct Config {
+///     value: String,
+/// }
+///
+/// let config: Config =
+///     xllm_requester::config_mgr::load_config("config.json")?;
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub fn load_config<T>(path: &str) -> Result<T>
 where
     T: DeserializeOwned,
