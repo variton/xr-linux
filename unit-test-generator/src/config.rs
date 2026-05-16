@@ -1,9 +1,28 @@
 use serde::Deserialize;
 
+/// Prompt configuration for supported programming languages.
+///
+/// This structure is typically loaded from a JSON configuration file
+/// and provides the prompt template associated with each language.
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "rust": "Explain the following Rust code:",
+///   "python": "Explain the following Python code:",
+///   "cpp": "Explain the following C++ code:"
+/// }
+/// ```
 #[derive(Deserialize, Debug)]
 pub struct Config {
+    /// Prompt template used for Rust source files.
     pub rust: String,
+
+    /// Prompt template used for Python source files.
     pub python: String,
+
+    /// Prompt template used for C++ source files.
     pub cpp: String,
 }
 

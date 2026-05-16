@@ -1,4 +1,8 @@
-use anyhow::Result;
+//! Library entry point for the `xllm_requester` crate.
+//!
+//! This module exposes the crate's public modules and provides [`run`],
+//! the main application workflow used by the CLI binary.
+use anyhow::{Context, Result};
 
 pub mod args;
 pub mod config;
@@ -16,6 +20,28 @@ use crate::llm_requester::instance_llm_requester;
 use crate::lrconfig::LRConfig;
 use crate::prompt::get_prompt;
 
+/// Runs the main application workflow.
+///
+/// This function:
+///
+/// 1. validates the command-line arguments,
+/// 2. builds a prompt from the input source file and prompt configuration,
+/// 3. loads the LLM requester configuration,
+/// 4. sends the prompt to the configured LLM,
+/// 5. writes the LLM response to the output file.
+///
+/// # Errors
+///
+/// Returns an error if:
+///
+/// - `args.count` is `0`,
+/// - the input source file cannot be read,
+/// - the source file type cannot be detected,
+/// - the prompt configuration cannot be loaded,
+/// - the LLM requester configuration cannot be loaded,
+/// - the configured API key environment variable is missing,
+/// - the LLM request fails,
+/// - the output file cannot be written.
 pub async fn run(args: &Args) -> Result<()> {
     if args.count == 0 {
         anyhow::bail!("missing argument");
@@ -26,7 +52,12 @@ pub async fn run(args: &Args) -> Result<()> {
     let requester = instance_llm_requester(&lrconfig)?;
 
     let response = requester.request(&prompt).await?;
-    write(&args.output, &response.output_text().unwrap())?;
+
+    let output = response
+        .output_text()
+        .context("LLM response did not contain output text")?;
+
+    write(&args.output, &output)?;
 
     Ok(())
 }

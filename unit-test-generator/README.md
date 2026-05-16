@@ -39,14 +39,20 @@ cargo run -- <file.cxx>
 
 Generate tests for Python 
 ```
-cargo run -- <file.py>
+cargo run -- -i sample/mgr.py -o output.txt --pconf prompts.json --lrconf requester.json
 
 ```
 
 ## To run tests
-Use the following command line to run a simple non regression test:
+Use the following command line to run all the tests:
+```
+cargo test
 
 ```
-cargo run -- -i sample/mgr.py -o output.txt --pconf prompts.json
+
+## How to use the tool
+Use the following command line to use the tool:
+```
+cargo run -- -i sample/mgr.py -o output.txt --pconf prompts.json --lrconf requester.json
 
 ```
