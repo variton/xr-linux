@@ -12,6 +12,10 @@ pub struct Args {
     #[arg(short, long)]
     pub output: String,
 
+    /// LLMRequester configuration file
+    #[arg(long)]
+    pub lrconf: String,
+
     /// Prompt configuration file
     #[arg(long)]
     pub pconf: String,
@@ -41,6 +45,8 @@ mod tests {
             "in.txt",
             "--output",
             "out.txt",
+            "--lrconf",
+            "requester.json",
             "--pconf",
             "config.json",
             "--count",
@@ -49,6 +55,7 @@ mod tests {
 
         assert_eq!(args.input, "in.txt");
         assert_eq!(args.output, "out.txt");
+        assert_eq!(args.lrconf, "requester.json");
         assert_eq!(args.pconf, "config.json");
         assert_eq!(args.count, 5);
     }
@@ -61,6 +68,8 @@ mod tests {
             "in.txt",
             "--output",
             "out.txt",
+            "--lrconf",
+            "requester.json",
             "--pconf",
             "config.json",
         ]);

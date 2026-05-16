@@ -1,3 +1,4 @@
+use crate::lrconfig::LRConfig;
 use anyhow::{Context, Result};
 use async_openai::types::responses::Response;
 use async_openai::{Client, config::OpenAIConfig, types::responses::CreateResponseArgs};
@@ -55,6 +56,15 @@ pub fn create_llm_requester<'a>(model_name: &'a str, max_tokens: u32) -> Result<
     Ok(requester)
 }
 
+pub fn instance_llm_requester(lrconfig: &LRConfig) -> Result<LLMRequester<'_>> {
+    let key = std::env::var(&lrconfig.key_env_var)?;
+
+    let mut requester = LLMRequester::new(key, &lrconfig.model, lrconfig.max_tokens);
+    requester.init()?;
+
+    Ok(requester)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -72,15 +82,31 @@ mod tests {
         assert!(error.contains("LLM client has not been initialized"));
     }
 
-    // #[test]
-    // fn create_llm_requester_fails_without_env_var() {
-    //     std::env::remove_var("OPEN_AI_KEY");
+    #[test]
+    fn instance_llm_requester_fails_without_configured_env_var() {
+        let lrconfig = LRConfig {
+            key_env_var: "MISSING_OPEN_AI_KEY".to_string(),
+            model: "gpt-4".to_string(),
+            max_tokens: 100,
+        };
 
-    //     let result = create_llm_requester(
-    //         "gpt-4",
-    //         100,
-    //     );
+        unsafe {
+            std::env::remove_var(&lrconfig.key_env_var);
+        }
 
-    //     assert!(result.is_err());
-    // }
+        let result = instance_llm_requester(&lrconfig);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn create_llm_requester_fails_without_env_var() {
+        unsafe {
+            std::env::remove_var("OPEN_AI_KEY");
+        }
+
+        let result = create_llm_requester("gpt-4", 100);
+
+        assert!(result.is_err());
+    }
 }
