@@ -5,12 +5,12 @@
 //! returned by the server.
 
 use clap::Parser;
+use std::io::Write;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
 };
 
-/// Command-line arguments for the TCP client.
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Args {
@@ -22,29 +22,40 @@ struct Args {
     #[arg(long, short)]
     port: u16,
 
-    /// Message words to send, joined with spaces before transmission.
+    /// Command to execute remotely.
     #[arg(required = true)]
     message: Vec<String>,
 }
 
-/// Connects to the configured TCP server, sends the message, and prints the response.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     let addr = format!("{}:{}", args.host, args.port);
-    let message = args.message.join(" ");
+    let command = args.message.join(" ");
 
     let mut stream = TcpStream::connect(&addr).await?;
 
-    // Closing the write side signals to the server that the request is complete.
-    stream.write_all(message.as_bytes()).await?;
+    // Send command terminated by newline.
+    stream.write_all(command.as_bytes()).await?;
+    stream.write_all(b"\n").await?;
+
+    // Tell the server we're done sending.
     stream.shutdown().await?;
 
-    let mut response = Vec::new();
-    stream.read_to_end(&mut response).await?;
+    // Stream output as it arrives.
+    let mut buf = [0u8; 4096];
 
-    println!("{}", String::from_utf8_lossy(&response));
+    loop {
+        let n = stream.read(&mut buf).await?;
+
+        if n == 0 {
+            break;
+        }
+
+        print!("{}", String::from_utf8_lossy(&buf[..n]));
+        std::io::stdout().flush()?;
+    }
 
     Ok(())
 }
