@@ -23,3 +23,6 @@ The tool generates unit test for different languages using AI models.
 
 ### Update-pkg
 The cli update the packages listed with apt list --upgradable 
+
+### Docker client [dclient]
+An asynchronious docker client to send message to a docker container.
