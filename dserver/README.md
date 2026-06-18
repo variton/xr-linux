@@ -82,6 +82,21 @@ After building a release binary, run it directly:
 ./target/release/dserver --host 127.0.0.1 --port 9000
 ```
 
+## Install on target [in a docker container]
+
+```sh
+docker cp ./target/release/dserver <container_name>:/usr/local/bin 
+```
+
+### Run on target
+
+```sh
+dserver --host 127.0.0.1 --port <port_share_with_host> &
+```
+
+remark: 
+the docker container should have the specified port exposed
+
 ## Send Commands
 
 Use a TCP client such as `nc`:
@@ -118,7 +133,6 @@ cargo run -- --help
 This program executes arbitrary shell commands received over TCP. Do not expose it to untrusted networks or users. Binding to `0.0.0.0` makes it reachable from other machines that can access the host, which can allow remote command execution.
 
 For local testing, prefer binding to:
-
 ```text
 127.0.0.1
 ```
