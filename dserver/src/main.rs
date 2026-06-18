@@ -1,33 +1,28 @@
 use clap::Parser;
-use std::io;
+use std::{io, process::Stdio, sync::Arc};
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
     net::{TcpListener, TcpStream},
     process::Command,
+    sync::Mutex,
 };
 
-/// Command-line configuration for the TCP command server.
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Args {
-    /// Hostname or IP address to bind to
     #[arg(long, short)]
     host: String,
 
-    /// TCP port to listen on
     #[arg(long, short)]
     port: u16,
 }
 
-/// Starts the TCP listener and spawns one async task per client connection.
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let args = Args::parse();
 
     let addr = format!("{}:{}", args.host, args.port);
     let listener = TcpListener::bind(&addr).await?;
-
-    // println!("Server listening on {addr}");
 
     loop {
         let (socket, peer_addr) = listener.accept().await?;
@@ -40,52 +35,93 @@ async fn main() -> io::Result<()> {
     }
 }
 
-/// Reads a complete command from a client, executes it, and returns the result.
-async fn handle_client(mut socket: TcpStream) -> io::Result<()> {
-    let mut buffer = Vec::new();
+async fn handle_client(socket: TcpStream) -> io::Result<()> {
+    let (read_half, write_half) = socket.into_split();
 
-    socket.read_to_end(&mut buffer).await?;
+    let mut reader = BufReader::new(read_half);
+    let writer = Arc::new(Mutex::new(write_half));
 
-    let message = String::from_utf8_lossy(&buffer).trim().to_string();
+    let mut command = String::new();
+    reader.read_line(&mut command).await?;
 
-    if message.is_empty() {
-        socket.write_all(b"No command received\n").await?;
-        socket.shutdown().await?;
+    let command = command.trim();
+
+    if command.is_empty() {
+        let mut w = writer.lock().await;
+        w.write_all(b"No command received\n").await?;
+        w.shutdown().await?;
         return Ok(());
     }
 
-    // println!("Executing: {message}");
+    run_and_stream(command, writer.clone()).await?;
 
-    let output = run_command(&message).await?;
-
-    if output.is_empty() {
-        socket
-            .write_all(b"Command completed with no output\n")
-            .await?;
-    } else {
-        socket.write_all(output.as_bytes()).await?;
-    }
-
-    socket.shutdown().await?;
+    let mut w = writer.lock().await;
+    w.shutdown().await?;
 
     Ok(())
 }
 
-/// Executes a shell command and returns stdout when the command succeeds.
-///
-/// The command is passed to `sh -c`, so callers must only provide trusted input.
-async fn run_command(command: &str) -> io::Result<String> {
-    let output = Command::new("sh").arg("-c").arg(command).output().await?;
+async fn run_and_stream(
+    command: &str,
+    writer: Arc<Mutex<tokio::net::tcp::OwnedWriteHalf>>,
+) -> io::Result<()> {
+    let mut child = Command::new("stdbuf")
+        .arg("-oL")
+        .arg("-eL")
+        .arg("sh")
+        .arg("-c")
+        .arg(command)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()?;
 
-    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
 
-    if output.status.success() {
-        Ok(stdout)
-    } else {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            format!("command failed: {stderr}"),
-        ))
+    let stdout_writer = writer.clone();
+    let stdout_task = tokio::spawn(async move { stream_output(stdout, stdout_writer).await });
+
+    let stderr_writer = writer.clone();
+    let stderr_task = tokio::spawn(async move { stream_output(stderr, stderr_writer).await });
+
+    let status = child.wait().await?;
+
+    stdout_task.await??;
+    stderr_task.await??;
+
+    if !status.success() {
+        let msg = match status.code() {
+            Some(code) => format!("\nCommand exited with status code {code}\n"),
+            None => "\nCommand terminated by signal\n".to_string(),
+        };
+
+        let mut w = writer.lock().await;
+        w.write_all(msg.as_bytes()).await?;
     }
+
+    Ok(())
+}
+
+async fn stream_output<R>(
+    mut reader: R,
+    writer: Arc<Mutex<tokio::net::tcp::OwnedWriteHalf>>,
+) -> io::Result<()>
+where
+    R: AsyncReadExt + Unpin,
+{
+    let mut buf = [0u8; 4096];
+
+    loop {
+        let n = reader.read(&mut buf).await?;
+
+        if n == 0 {
+            break;
+        }
+
+        let mut w = writer.lock().await;
+        w.write_all(&buf[..n]).await?;
+        w.flush().await?;
+    }
+
+    Ok(())
 }
